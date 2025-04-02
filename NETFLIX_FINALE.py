@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 from pymongo import MongoClient
+import os  # Importing os to access environment variables
 
 # Step 1: Load the dataset
 df = pd.read_csv(r'C:\Users\wongc\Desktop\DBS Asgment\Refined_Netflix_datasets.csv', encoding='ISO-8859-1')
@@ -15,36 +16,33 @@ def clean_cast(cast):
 # Apply the cleaning function to the 'stars' column
 df['cast'] = df['stars'].apply(clean_cast)
 
-# Step 3: Drop the 'cast' column after cleaning
-df.drop(columns=['cast'], inplace=True)
-
-# Step 4: Drop the old 'stars' column
+# Step 3: Drop the old 'stars' column
 df.drop(columns=['stars'], inplace=True)
 
-# Step 5: Capitalize all column headers
+# Step 4: Capitalize all column headers
 df.columns = [col.upper() for col in df.columns]
 
-# Step 6: Clean the 'year' column to just show the year (remove any extra information like parentheses)
+# Step 5: Clean the 'year' column to just show the year (remove any extra information like parentheses)
 df['YEAR'] = df['YEAR'].astype(str).str.extract(r'(\d{4})')[0]
 
-# Step 7: Capitalize all text in the relevant columns
+# Step 6: Capitalize all text in the relevant columns
 df['TITLE'] = df['TITLE'].str.upper()
 df['CERTIFICATE'] = df['CERTIFICATE'].str.upper()
 df['GENRE'] = df['GENRE'].str.upper()
 df['DESCRIPTION'] = df['DESCRIPTION'].str.upper()
 
-# Step 8: Move 'ID' to the first column
+# Step 7: Move 'ID' to the first column
 columns = ['ID'] + [col for col in df if col != 'ID']
 df = df[columns]
 
-# Step 9: Save the refined dataset to a new CSV file
+# Step 8: Save the refined dataset to a new CSV file
 output_file = r'C:\Users\wongc\Desktop\DBS Asgment\Refined_Netflix_datasets_cleaned.csv'
 df.to_csv(output_file, index=False)
 
 print(f"✅ Dataset cleaned and saved successfully to {output_file}.")
 
-# Step 10: Connect to MongoDB Atlas
-password = "M44100127"  # Replace with your actual MongoDB password
+# Step 9: Connect to MongoDB Atlas (Replace with environment variable for password)
+password = os.getenv('MONGO_PASSWORD')  # Using an environment variable for the password
 connection_string = f"mongodb+srv://JIEUN:{password}@netflixclusters.ennf3.mongodb.net/?retryWrites=true&w=majority&appName=NetflixClusters"
 
 try:
@@ -54,7 +52,7 @@ try:
     collection = db["MOVIES_FINALE"]  # Changed collection name to MOVIES_FINALE
     print("✅ Connected to MongoDB successfully!")
     
-    # Step 11: Insert data into MongoDB
+    # Step 10: Insert data into MongoDB
     data = df.to_dict(orient="records")  # Convert DataFrame to a list of dictionaries for MongoDB insertion
     if data:
         collection.insert_many(data)  # Insert data into MongoDB
